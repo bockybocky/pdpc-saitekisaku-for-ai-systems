@@ -47,45 +47,36 @@ Common LLM-based agent problems (you've probably hit all of these):
 
 ## 📚 7 Charters Included
 
-```mermaid
-graph TB
-    Meta[01. promotion-demotion-meta<br/>Meta governance layer]
-    Borrow[02. borrow-then-localize<br/>Borrow layer]
-    Det[03. deterministic-over-llm-rederive<br/>Execute layer]
-    Signal[04. signal-event-reaction-tree<br/>Signal layer]
-    Regime[05. regime-switch-pdpc<br/>Macro layer]
-    Advice[06. advice-result-tree<br/>Human ops layer]
-    Thesis[07. thesis-failure-mode-tree<br/>Domain SOP layer]
+**Architecture layers** (top governs all below):
 
-    Meta -.governs.-> Borrow
-    Meta -.governs.-> Det
-    Meta -.governs.-> Signal
-    Meta -.governs.-> Regime
-    Meta -.governs.-> Advice
-    Meta -.governs.-> Thesis
-
-    Borrow --> Det
-    Signal -.complements.-> Thesis
-    Regime -.complements.-> Thesis
-
-    style Meta fill:#ffd700,stroke:#333,stroke-width:3px
-    style Borrow fill:#87ceeb,stroke:#333
-    style Det fill:#87ceeb,stroke:#333
-    style Signal fill:#90ee90,stroke:#333
-    style Regime fill:#90ee90,stroke:#333
-    style Advice fill:#ffb6c1,stroke:#333
-    style Thesis fill:#dda0dd,stroke:#333
+```
+🟡 META GOVERNANCE
+   └── 01. promotion-demotion-meta  ← Sets the rules for all other charters
+       │
+       ├── 🔵 BORROW / EXECUTE
+       │   ├── 02. borrow-then-localize        (when bringing external repos in)
+       │   └── 03. deterministic-over-llm-rederive  (when extracting reusable logic)
+       │
+       ├── 🟢 SIGNAL / MACRO
+       │   ├── 04. signal-event-reaction-tree  (high-freq events: earnings / FOMC)
+       │   └── 05. regime-switch-pdpc          (low-freq macro transitions)
+       │
+       ├── 🩷 HUMAN OPS
+       │   └── 06. advice-result-tree          (4-quadrant after-advice scripts)
+       │
+       └── 🟣 DOMAIN SOP
+           └── 07. thesis-failure-mode-tree    (pre-enumerate how thesis dies)
 ```
 
-| # | Charter | Problem Solved | Layer |
-|---|---|---|---|
-| 1 | [promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | Each charter sets its own promotion criteria; no consistent framework | 🟡 Meta governance |
-| 2 | [borrow-then-localize](charters/02-borrow-then-localize.md) | Blindly cloning external repos creates platform / architecture mismatches | 🔵 Borrow / Execute |
-| 3 | [deterministic-over-llm-rederive](charters/03-deterministic-over-llm-rederive.md) | LLM re-deriving same logic each turn → inconsistent results | 🔵 Borrow / Execute |
-| 4 | [signal-event-reaction-tree](charters/04-signal-event-reaction-tree.md) | High-frequency signal events (e.g., earnings) reacted to ad-hoc | 🟢 Signal layer |
-| 5 | [regime-switch-pdpc](charters/05-regime-switch-pdpc.md) | Regime change reactions not pre-codified | 🟢 Macro layer |
-| 6 | [advice-result-tree](charters/06-advice-result-tree.md) | 4 possible outcomes after giving advice not pre-thought | 🩷 Human ops |
-| 7 | [thesis-failure-mode-tree](charters/07-thesis-failure-mode-tree.md) | Thesis failure modes not pre-enumerated | 🟣 Domain SOP |
+| # | Charter | Problem Solved |
+|---|---|---|
+| 1 | 🟡 [promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | Each charter sets its own promotion criteria; no consistent framework |
+| 2 | 🔵 [borrow-then-localize](charters/02-borrow-then-localize.md) | Blindly cloning external repos creates platform / architecture mismatches |
+| 3 | 🔵 [deterministic-over-llm-rederive](charters/03-deterministic-over-llm-rederive.md) | LLM re-deriving same logic each turn → inconsistent results |
+| 4 | 🟢 [signal-event-reaction-tree](charters/04-signal-event-reaction-tree.md) | High-frequency signal events (e.g., earnings) reacted to ad-hoc |
+| 5 | 🟢 [regime-switch-pdpc](charters/05-regime-switch-pdpc.md) | Regime change reactions not pre-codified |
+| 6 | 🩷 [advice-result-tree](charters/06-advice-result-tree.md) | 4 possible outcomes after giving advice not pre-thought |
+| 7 | 🟣 [thesis-failure-mode-tree](charters/07-thesis-failure-mode-tree.md) | Thesis failure modes not pre-enumerated |
 
 Every charter is an instance of the same principle: **pre-enumerate + externalize discipline**.
 
@@ -95,33 +86,35 @@ Every charter is an instance of the same principle: **pre-enumerate + externaliz
 
 Every charter runs through a 4-state lifecycle:
 
-```mermaid
-stateDiagram-v2
-    [*] --> DRAFT
-    DRAFT --> PROVISIONAL: Operator acks in 7d
-    DRAFT --> [*]: no ack in 7d (discarded)
-
-    PROVISIONAL --> CONFIRMED: N cases + correct rate ≥ 80% + 0 ill-defined
-    PROVISIONAL --> SUSPENDED: correct rate < 50%
-    PROVISIONAL --> SUSPENDED: ≥ 2 ill-defined / contradictory
-    PROVISIONAL --> SUSPENDED: SHADOW expired + cases < 1
-    PROVISIONAL --> SUSPENDED: Operator "too verbose" 3x
-
-    CONFIRMED --> SUSPENDED: ≥ 3 disconfirming + ack
-    CONFIRMED --> SUSPENDED: violates upstream charter
-
-    SUSPENDED --> PROVISIONAL: revive in 60d + new evidence
-    SUSPENDED --> [*]: no revive in 60d (archived)
-```
-
-**State descriptions**:
-
 | State | Meaning | Duration |
 |---|---|---|
 | 📝 **DRAFT** | Just drafted, not yet in SHADOW | 7 days to PROVISIONAL or discard |
 | 🟡 **PROVISIONAL** | Trial period (= SHADOW phase) | 30-60 days (per layer) |
 | 🟢 **CONFIRMED** | Passed gate, permanent rule | Permanent (until demoted) |
 | 🔴 **SUSPENDED** | Paused, awaiting re-evaluation | 60d review window |
+
+**Transitions** (pre-enumerated, agent never improvises):
+
+```
+📝 DRAFT
+   ├─ Operator acks in 7d ──────────────────────→ 🟡 PROVISIONAL
+   └─ no ack in 7d ─────────────────────────────→ ❌ discarded
+
+🟡 PROVISIONAL (= SHADOW phase, 30-60d trial)
+   ├─ N cases + correct rate ≥ 80% + 0 ill-defined → 🟢 CONFIRMED
+   ├─ correct rate < 50% ─────────────────────────→ 🔴 SUSPENDED
+   ├─ ≥ 2 ill-defined / contradictory ────────────→ 🔴 SUSPENDED
+   ├─ SHADOW expired + cases < 1 ─────────────────→ 🔴 SUSPENDED (dormant)
+   └─ Operator says "too verbose" 3 times ────────→ 🔴 SUSPENDED
+
+🟢 CONFIRMED (permanent, but demotable)
+   ├─ ≥ 3 new disconfirming + Operator ack ───────→ 🔴 SUSPENDED (rare)
+   └─ Violates upstream charter ──────────────────→ 🔴 SUSPENDED (auto supersede)
+
+🔴 SUSPENDED (paused, 60d review window)
+   ├─ Operator revives in 60d + new evidence ─────→ 🟡 PROVISIONAL (reset SHADOW)
+   └─ no revive in 60d ───────────────────────────→ ❌ archived
+```
 
 ---
 
