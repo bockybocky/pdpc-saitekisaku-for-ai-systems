@@ -1,74 +1,137 @@
-# PDPC Saitekisaku Tsuikyu for AI Systems
+# 🎯 PDPC Saitekisaku Tsuikyu for AI Systems
 
-> Japanese QC discipline "Saitekisaku Tsuikyu" (最適策追究 / pursuit of optimal countermeasures) applied to govern decisions, signals, and execution in AI agent systems
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Charters](https://img.shields.io/badge/charters-7-blue.svg)](charters/)
+[![Bilingual](https://img.shields.io/badge/docs-EN%20%2F%20中文-green.svg)](#中文版本)
+[![Philosophy](https://img.shields.io/badge/origin-PDPC%201979-orange.svg)](https://en.wikipedia.org/wiki/Seven_management_and_planning_tools)
+[![Status](https://img.shields.io/badge/status-PROVISIONAL-yellow.svg)](#)
 
-**PDPC** (Process Decision Program Chart, 過程決策程序圖) — one of the 7 New QC Tools formalized by Mizuno Shigeru in 1979. Core verb is **追究 (tsuikyu / pursuit)**: exhaustively interrogate every failure mode until an optimal countermeasure is found.
+> 🇯🇵 Japanese QC discipline **"Saitekisaku Tsuikyu"** (最適策追究 / pursuit of optimal countermeasures) applied to govern decisions, signals, and execution in AI agent systems.
+
+**PDPC** (Process Decision Program Chart) — one of the 7 New QC Tools formalized by **Mizuno Shigeru in 1979**. Core verb is **追究 (tsuikyu / pursuit)**: exhaustively interrogate every failure mode until an optimal countermeasure is found.
 
 A cousin of FMEA / FTA / Decision Tree, but with stronger emphasis on **dynamic replan + discipline externalization**.
 
+> [!TIP]
+> **TL;DR**: Your LLM agent's rules keep accumulating but no one reviews them. Your charter promotion criteria are inconsistent. Your agent re-derives the same logic differently each turn. This repo gives you a battle-tested 4-state lifecycle + 7 reusable charters to govern all of that.
+
 ---
 
-## Why AI Agent Systems Need This
+## 📋 Table of Contents
+
+- [Why AI Agent Systems Need This](#-why-ai-agent-systems-need-this)
+- [7 Charters Included](#-7-charters-included)
+- [4 States + 6 Transitions PDPC Tree](#-4-states--6-transitions-pdpc-tree-meta-charter-core)
+- [How to Use](#-how-to-use)
+- [Philosophical Sources](#-philosophical-sources)
+- [License](#-license)
+- [中文版本](#中文版本)
+
+---
+
+## 💡 Why AI Agent Systems Need This
 
 Common LLM-based agent problems (you've probably hit all of these):
 
 | Problem | PDPC Solution |
 |---|---|
-| Agent re-derives same logic each time and gets inconsistent results | Freeze deterministic logic into rules / scripts; forbid LLM from re-thinking each turn |
-| Agent blindly clones external repo and hits platform pitfalls | "Borrow then localize" discipline: fork to local, review per-component |
-| Charters / rules accumulate but no one reviews them | Unified promotion / demotion gates (PROVISIONAL → CONFIRMED / SUSPENDED) + daily cron expiry alert |
-| Red-flag signal fires but human brain freezes in the moment | Pre-enumerate 4-branch PDPC tree, follow the tree instead of improvising |
+| 🔁 Agent re-derives same logic each time and gets inconsistent results | Freeze deterministic logic into rules / scripts; forbid LLM from re-thinking each turn |
+| 📥 Agent blindly clones external repo and hits platform pitfalls | "Borrow then localize" discipline: fork to local, review per-component |
+| 📜 Charters / rules accumulate but no one reviews them | Unified promotion / demotion gates (PROVISIONAL → CONFIRMED / SUSPENDED) + daily cron expiry alert |
+| 🚨 Red-flag signal fires but human brain freezes in the moment | Pre-enumerate 4-branch PDPC tree, follow the tree instead of improvising |
 
-**Core principle**: discipline lives outside (in charters / rules / cron jobs), not inside the agent's "intuition this turn".
+> [!IMPORTANT]
+> **Core principle**: discipline lives **outside** (in charters / rules / cron jobs), not inside the agent's "intuition this turn".
 
 ---
 
-## 7 Charters Included
+## 📚 7 Charters Included
 
-| Charter | Problem Solved | Layer |
-|---|---|---|
-| [promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | Each charter sets its own promotion criteria; no consistent framework | Meta governance |
-| [borrow-then-localize](charters/02-borrow-then-localize.md) | Blindly cloning external repos creates platform / architecture mismatches | Borrow / Execute |
-| [deterministic-over-llm-rederive](charters/03-deterministic-over-llm-rederive.md) | LLM re-deriving same logic each turn → inconsistent results | Borrow / Execute |
-| [signal-event-reaction-tree](charters/04-signal-event-reaction-tree.md) | High-frequency signal events (e.g., earnings) reacted to ad-hoc | Signal layer |
-| [regime-switch-pdpc](charters/05-regime-switch-pdpc.md) | Regime change reactions not pre-codified | Macro layer |
-| [advice-result-tree](charters/06-advice-result-tree.md) | 4 possible outcomes after giving advice not pre-thought | Human ops |
-| [thesis-failure-mode-tree](charters/07-thesis-failure-mode-tree.md) | Thesis failure modes not pre-enumerated | Domain SOP |
+```mermaid
+graph TB
+    Meta[01. promotion-demotion-meta<br/>Meta governance layer]
+    Borrow[02. borrow-then-localize<br/>Borrow layer]
+    Det[03. deterministic-over-llm-rederive<br/>Execute layer]
+    Signal[04. signal-event-reaction-tree<br/>Signal layer]
+    Regime[05. regime-switch-pdpc<br/>Macro layer]
+    Advice[06. advice-result-tree<br/>Human ops layer]
+    Thesis[07. thesis-failure-mode-tree<br/>Domain SOP layer]
+
+    Meta -.governs.-> Borrow
+    Meta -.governs.-> Det
+    Meta -.governs.-> Signal
+    Meta -.governs.-> Regime
+    Meta -.governs.-> Advice
+    Meta -.governs.-> Thesis
+
+    Borrow --> Det
+    Signal -.complements.-> Thesis
+    Regime -.complements.-> Thesis
+
+    style Meta fill:#ffd700,stroke:#333,stroke-width:3px
+    style Borrow fill:#87ceeb,stroke:#333
+    style Det fill:#87ceeb,stroke:#333
+    style Signal fill:#90ee90,stroke:#333
+    style Regime fill:#90ee90,stroke:#333
+    style Advice fill:#ffb6c1,stroke:#333
+    style Thesis fill:#dda0dd,stroke:#333
+```
+
+| # | Charter | Problem Solved | Layer |
+|---|---|---|---|
+| 1 | [promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | Each charter sets its own promotion criteria; no consistent framework | 🟡 Meta governance |
+| 2 | [borrow-then-localize](charters/02-borrow-then-localize.md) | Blindly cloning external repos creates platform / architecture mismatches | 🔵 Borrow / Execute |
+| 3 | [deterministic-over-llm-rederive](charters/03-deterministic-over-llm-rederive.md) | LLM re-deriving same logic each turn → inconsistent results | 🔵 Borrow / Execute |
+| 4 | [signal-event-reaction-tree](charters/04-signal-event-reaction-tree.md) | High-frequency signal events (e.g., earnings) reacted to ad-hoc | 🟢 Signal layer |
+| 5 | [regime-switch-pdpc](charters/05-regime-switch-pdpc.md) | Regime change reactions not pre-codified | 🟢 Macro layer |
+| 6 | [advice-result-tree](charters/06-advice-result-tree.md) | 4 possible outcomes after giving advice not pre-thought | 🩷 Human ops |
+| 7 | [thesis-failure-mode-tree](charters/07-thesis-failure-mode-tree.md) | Thesis failure modes not pre-enumerated | 🟣 Domain SOP |
 
 Every charter is an instance of the same principle: **pre-enumerate + externalize discipline**.
 
 ---
 
-## 4 States + 6 Transitions PDPC Tree (Meta Charter Core)
+## 🔄 4 States + 6 Transitions PDPC Tree (Meta Charter Core)
 
 Every charter runs through a 4-state lifecycle:
 
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> PROVISIONAL: Operator acks in 7d
+    DRAFT --> [*]: no ack in 7d (discarded)
+
+    PROVISIONAL --> CONFIRMED: N cases + correct rate ≥ 80% + 0 ill-defined
+    PROVISIONAL --> SUSPENDED: correct rate < 50%
+    PROVISIONAL --> SUSPENDED: ≥ 2 ill-defined / contradictory
+    PROVISIONAL --> SUSPENDED: SHADOW expired + cases < 1
+    PROVISIONAL --> SUSPENDED: Operator "too verbose" 3x
+
+    CONFIRMED --> SUSPENDED: ≥ 3 disconfirming + ack
+    CONFIRMED --> SUSPENDED: violates upstream charter
+
+    SUSPENDED --> PROVISIONAL: revive in 60d + new evidence
+    SUSPENDED --> [*]: no revive in 60d (archived)
 ```
-DRAFT ─┬─ Operator acks within 7 days ──→ PROVISIONAL (SHADOW begins)
-       └─ no ack in 7 days ───────────────→ discarded
 
-PROVISIONAL ─┬─ N cases + correct rate ≥ 80% + 0 ill-defined → CONFIRMED
-             ├─ correct rate < 50% ─────────────────────────→ SUSPENDED
-             ├─ ≥ 2 ill-defined / contradictory cases ────→ SUSPENDED
-             ├─ SHADOW expired + cases < 1 ────────────────→ SUSPENDED (dormant, not deleted)
-             └─ Operator says "too verbose" 3 times ───────→ SUSPENDED
+**State descriptions**:
 
-CONFIRMED ─┬─ ≥ 3 new disconfirming cases + Operator ack ─→ SUSPENDED (rare)
-           └─ Violates upstream charter ─────────────────→ SUSPENDED (auto supersede)
-
-SUSPENDED ─┬─ Operator revives within 60d + new evidence ─→ PROVISIONAL (reset SHADOW)
-           └─ no revive in 60d ──────────────────────────→ archived
-```
+| State | Meaning | Duration |
+|---|---|---|
+| 📝 **DRAFT** | Just drafted, not yet in SHADOW | 7 days to PROVISIONAL or discard |
+| 🟡 **PROVISIONAL** | Trial period (= SHADOW phase) | 30-60 days (per layer) |
+| 🟢 **CONFIRMED** | Passed gate, permanent rule | Permanent (until demoted) |
+| 🔴 **SUSPENDED** | Paused, awaiting re-evaluation | 60d review window |
 
 ---
 
-## How to Use
+## 🚀 How to Use
 
-### 1. Fork charters into your agent system's memory
+### 1️⃣ Fork charters into your agent system's memory
 
 Each charter is markdown + YAML frontmatter. Drop them into your agent memory dir (Claude Code: `~/.claude/projects/.../memory/`; other agent runtimes similarly).
 
-### 2. Schedule a daily cron for expiry checks
+### 2️⃣ Schedule a daily cron for expiry checks
 
 Every PROVISIONAL charter has `shadow_expiry: YYYY-MM-DD` in frontmatter. Cron scans daily, alerts 7 days before expiry:
 
@@ -79,9 +142,9 @@ Every PROVISIONAL charter has `shadow_expiry: YYYY-MM-DD` in frontmatter. Cron s
 - Suggestion: promote to CONFIRMED
 ```
 
-Cron script example: [`docs/cron_expiry_check.py`](docs/cron_expiry_check.py).
+Cron script example: [`docs/cron_expiry_check.py`](docs/cron_expiry_check.py) — stdlib-only Python, runs anywhere.
 
-### 3. Use the template when writing new charters
+### 3️⃣ Use the template when writing new charters
 
 See [`docs/CHARTER_TEMPLATE.md`](docs/CHARTER_TEMPLATE.md). Every charter MUST include:
 - `shadow_expiry`
@@ -89,9 +152,12 @@ See [`docs/CHARTER_TEMPLATE.md`](docs/CHARTER_TEMPLATE.md). Every charter MUST i
 - `upgrade_threshold` (cases / correct_rate)
 - `downgrade_triggers`
 
+> [!WARNING]
+> Don't write prose describing deterministic logic — extract logic into script; prose only writes **what** + **when** + **why**. See [`charters/03-deterministic-over-llm-rederive.md`](charters/03-deterministic-over-llm-rederive.md) for the rationale.
+
 ---
 
-## Philosophical Sources
+## 📖 Philosophical Sources
 
 | Reference | Why It Matters |
 |---|---|
@@ -104,21 +170,34 @@ PDPC is in the same family as **Toyota TBP**, **5 Why**, **A3 Problem Solving**,
 
 ---
 
-## License
+## 📄 License
 
 MIT — free to use / fork / modify / commercial use.
 
 ---
 
-## Origin
+## 🌱 Origin
 
 This repo was extracted from [@bockybocky](https://github.com/bockybocky)'s personal AI agent system memory. The original system contained financial domain-specific context; this repo has been generic-ized to remove any trader / asset / strategy specifics.
 
-If your agent system suffers from "rules accumulate but governance breaks down", the PDPC 4-state + 7-charter pattern should help.
+> [!NOTE]
+> If your agent system suffers from "rules accumulate but governance breaks down", the PDPC 4-state + 7-charter pattern should help.
 
 ---
 
-*PDPC Saitekisaku Tsuikyu — write the pursuit discipline into the AI agent system, don't rely on in-the-moment improvisation.*
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=bockybocky/pdpc-saitekisaku-for-ai-systems&type=Date)](https://star-history.com/#bockybocky/pdpc-saitekisaku-for-ai-systems&Date)
+
+---
+
+## 🤝 Contributing
+
+Issues + PRs welcome. If you adopt these charters in your own agent system and have lessons learned, please share via Issue.
+
+---
+
+*🇯🇵 PDPC Saitekisaku Tsuikyu — write the pursuit discipline into the AI agent system, don't rely on in-the-moment improvisation.*
 
 ---
 ---
