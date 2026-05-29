@@ -1,6 +1,6 @@
 ---
 name: thesis-failure-mode-tree
-description: PROVISIONAL Charter — 任何 thesis / hypothesis / investment doc MUST 含「5 大 failure mode 樹」，預先窮舉這個 thesis 可能怎麼死 + 對應監控指標 + 觸發 action
+description: PROVISIONAL Charter — Any thesis / hypothesis / investment doc MUST contain a "5 failure mode tree". Pre-enumerate all ways this thesis could die + monitoring indicators + triggered action.
 metadata:
   type: feedback
   scope: domain
@@ -11,8 +11,131 @@ metadata:
     cases: 4
     correct_rate: 0.75
   downgrade_triggers:
-    - 採信率 < 0.50
+    - correct_rate < 0.50
 ---
+
+# Thesis Failure Mode Tree (PDPC Domain SOP)
+
+Every thesis / hypothesis / investment doc MUST contain a "**5 failure mode tree**" — pre-enumerate all ways this thesis could die. Extends kill_switch from **single trigger** to **tree-structured pre-play**.
+
+## Why
+
+Only listing "kill_switch" (when this trigger fires, exit) typically **misses**:
+- How many ways could it die (earnings / competitive / dilution / regime / disconfirming evidence)
+- Monitoring indicators for each
+- Triggered action for each
+
+**Real case** (investment theses generally fall into this trap): thesis base data stale 30 days uncaught, because kill_switch only watches price + earnings event, doesn't watch SEC filings / FCF triangulation / dilution risk. **Failure modes incompletely listed**.
+
+PDPC solution: thesis MUST contain 5-mode tree (each mode doesn't need a trigger, but MUST be listed for monitoring).
+
+## 5 Failure Modes (minimum required set)
+
+Each thesis must answer how to handle these 5 modes:
+
+| # | Failure Mode | Monitoring Indicator | Triggered Action |
+|---|---|---|---|
+| **1** | **Earnings miss / guidance cut** | Quarterly EPS / Revenue / guidance vs consensus | miss > 5% → re-review thesis pillar |
+| **2** | **Competitive structure collapse** | New entrants / substitutes / customer concentration | top-1 customer loss > 20% → SUSPENDED |
+| **3** | **Balance sheet deterioration / dilution** | Convertible issuance / SBC ratio / cash burn rate | convertible > 20% market cap → re-model dilution |
+| **4** | **Industry / Macro regime switch** | Market state / interest rate / regulation | Regime → Bear AND stock < -50% high → trim |
+| **5** | **Thesis itself wrong (disconfirming evidence)** | Cross-vendor red team / new evidence | ≥ 3 disconfirming cases → SUSPENDED rewrite |
+
+## Thesis Frontmatter Template
+
+```yaml
+# existing frontmatter
+kill_switch:
+  - trigger: price < $X
+    action: trim 50%
+    status: ACTIVE
+
+# new: failure_mode_tree
+failure_mode_tree:
+  earnings:
+    monitor: EPS vs consensus quarterly
+    threshold: miss > 5% OR guidance cut
+    action: pillar re-review within 48h
+    status: ACTIVE  # or NA(why)
+
+  competitive:
+    monitor: customer concentration / new entrants
+    threshold: top-1 customer > 30% revenue
+    action: thesis SUSPENDED until resolved
+    status: ACTIVE
+
+  dilution:
+    monitor: convertible bond + SBC quarterly
+    threshold: convertible > 20% market cap
+    action: re-model EV per share
+    status: ACTIVE
+
+  macro_regime:
+    monitor: regime transitions
+    threshold: regime → Bear AND stock < -50% high
+    action: trim to neutral
+    status: ACTIVE
+
+  thesis_disconfirming:
+    monitor: cross-vendor 紅隊 / new evidence
+    threshold: ≥ 3 disconfirming cases
+    action: SUSPENDED + rewrite
+    status: ACTIVE
+```
+
+**status allows `NA(reason)`** — if a mode doesn't apply to this thesis, explicitly state why (e.g., SaaS company with zero debt → dilution NA).
+
+## How to Apply
+
+### New Thesis Writing SOP
+
+When writing new thesis MUST run:
+
+1. Write thesis main text + kill_switch (existing falsifiable flow)
+2. **New**: write failure_mode_tree 5 modes (each ACTIVE or NA(why))
+3. **New**: grep existing theses for same-type mode → accumulate cases
+4. Operator acks → save
+
+### Backfilling Existing Theses
+
+Don't force backfill on all (avoid scope creep), but **MUST add failure_mode_tree when significantly editing thesis**.
+
+### Monitoring Cron
+
+Write `thesis_failure_mode_monitor.py` daily:
+- grep `theses/*/thesis.md` for failure_mode_tree
+- For each mode, use data source (SEC / API / cross-vendor red team log) check threshold
+- Any mode threshold triggered → inbox alert
+
+## PDPC Philosophy
+
+Application of "saitekisaku tsuikyu" at the **domain SOP layer**: exhaustive enumeration of how thesis can die → corresponding monitoring + action.
+
+Differs from [signal-event-reaction-tree](04-signal-event-reaction-tree.md):
+- Signal event is **high-frequency reaction** (several per month)
+- Thesis failure mode is **low-frequency early warning** (quarterly review)
+
+The two are complementary: signal tree handles "current events", failure mode tree handles "structural ways to die".
+
+## SHADOW → CONFIRMED Conditions
+
+(Per meta charter Domain SOP row)
+
+- Within 60 days, applied to ≥ 4 theses
+- Correct rate ≥ 75% (70% of cases' modes pre-captured actual future failure)
+- Operator didn't complain
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu (domain SOP layer)
+- Companion: [signal-event-reaction-tree](04-signal-event-reaction-tree.md) — high-frequency reaction sibling
+- Companion: [regime-switch-pdpc](05-regime-switch-pdpc.md) — §macro mode 細化
+- Meta: [promotion-demotion-meta](01-promotion-demotion-meta.md)
+
+---
+---
+
+# 中文版本
 
 # Thesis Failure Mode 樹 (PDPC Domain SOP)
 

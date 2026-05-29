@@ -1,5 +1,95 @@
 # Charter Template
 
+Template for writing new charters. Every charter should follow the same frontmatter + structure.
+
+## Frontmatter
+
+```yaml
+---
+name: charter-short-name  # kebab-case
+description: PROVISIONAL/CONFIRMED Charter — one-line description of what this charter solves
+metadata:
+  type: charter / feedback / project / reference  # 4 categories
+  scope: meta / domain / human-ops / signal / macro / borrow / execute  # PDPC layer
+  status: DRAFT / PROVISIONAL / CONFIRMED / SUSPENDED
+  shadow_expiry: 2024-MM-DD  # required for PROVISIONAL (DRAFT must → PROVISIONAL within 7d)
+  pdpc_layer: same as scope
+  upgrade_threshold:
+    cases: N  # need N real-world cases
+    correct_rate: ≥ 0.XX  # correct rate threshold
+  downgrade_triggers:
+    - correct_rate < 0.50
+    - ≥ 2 ill-defined cases
+    - Operator says "too verbose" 3 times
+---
+```
+
+## 7-Scenario Upgrade Gate Table (per meta charter)
+
+| Charter Type | N Cases | Correct Rate | SHADOW Period |
+|---|---|---|---|
+| Security rule | 1 | 100% | 0d |
+| Academic rule | 1 + 2 cross-vendor red team | 100% | 0d |
+| Methodology | 3 | 80% | 30d |
+| Execution discipline | 5 | 70% | 30d |
+| Meta | 2 child charters | 80% | 60d |
+| Domain SOP | 4 | 75% | 60d |
+| Human ops | 3 | 100% (zero tolerance) | 60d |
+
+## Required Sections
+
+```markdown
+# {Charter Name}
+
+One-line TL;DR
+
+## Why
+
+Why this charter is necessary (problem statement + real case)
+
+## {Core PDPC Tree / N Rules}
+
+Pre-enumerate all cases → corresponding action
+
+## How to apply
+
+- Trigger phrases / scenarios
+- Exceptions (not triggered)
+- Templates (script template / message template)
+
+## PDPC Philosophy
+
+One sentence describing how this charter relates to the "saitekisaku tsuikyu" discipline at the {layer} layer
+
+## SHADOW → CONFIRMED Conditions
+
+Fill per the upgrade gate table
+
+## Cases (fill in after adoption)
+
+- 2024-XX-XX (case description) — outcome class (correct / ill-defined / failed)
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu
+- Companion: [other-charter](XX-other-charter.md)
+- Meta: [promotion-demotion-meta](01-promotion-demotion-meta.md)
+```
+
+## Writing Rules
+
+1. **Don't write prose describing deterministic logic** — extract logic into script; prose only writes what + when + why
+2. **Pre-enumerate cases** — don't rely on agent in-the-moment improvisation
+3. **Add ledger** — every trigger writes JSONL, upgrade gate review counts them
+4. **Link to other charters** — use wikilink or markdown link
+
+---
+---
+
+# 中文版本
+
+# Charter Template
+
 寫新 charter 用這個 template。每條 charter 都該走相同 frontmatter + 結構。
 
 ## Frontmatter

@@ -11,11 +11,149 @@ metadata:
     cases: 2  # apply to ≥ 2 child charters
     correct_rate: 0.80
   downgrade_triggers:
-    - 採信率 < 0.50
+    - correct_rate < 0.50
     - ill-defined ≥ 2
 ---
 
 # Charter Lifecycle PDPC (Meta Layer)
+
+Unifies the promotion / demotion path tree for all PROVISIONAL charters. **Pre-enumerates** every branch trigger so the agent never improvises.
+
+## Why
+
+Common problem in LLM-based agent systems: rules / charters accumulate, each with its own promotion criteria, no consistent framework:
+- Some have hard thresholds, some rely on agent "feeling it"
+- Promotion timing unclear
+- Demotion is rare (charters usually die from neglect, not review)
+
+PDPC solution: pre-enumerate 4 states + 6 transition actions as a tree.
+
+## 4-State Definition
+
+| State | Meaning | Default Duration |
+|---|---|---|
+| **DRAFT** | Just drafted, not yet in SHADOW | Must enter SHADOW or be discarded within 7 days |
+| **PROVISIONAL** (= SHADOW phase) | Trial period; collect cases | 30 days (domain-ops 60d, meta charter 60d) |
+| **CONFIRMED** | Passed upgrade gate; permanent rule | Permanent (unless demotion triggered) |
+| **SUSPENDED** | Paused, awaiting re-evaluation | Review within 60 days or formally discard |
+
+## 6 Transition PDPC Tree
+
+```
+DRAFT ─┬─ Operator acks within 7d ──→ PROVISIONAL (SHADOW begins)
+       └─ no ack in 7d ─────────────→ discarded
+
+PROVISIONAL ─┬─ N cases + correct rate ≥ 80% + 0 ill-defined → CONFIRMED
+             ├─ correct rate < 50% ─────────────────────────→ SUSPENDED
+             ├─ ≥ 2 ill-defined / contradictory ────────────→ SUSPENDED
+             ├─ SHADOW expired + cases < 1 ─────────────────→ SUSPENDED (dormant)
+             └─ Operator says "too verbose" 3 times ────────→ SUSPENDED
+
+CONFIRMED ─┬─ ≥ 3 new disconfirming cases + Operator ack ──→ SUSPENDED (rare)
+           └─ Violates upstream charter ─────────────────→ SUSPENDED (auto supersede)
+
+SUSPENDED ─┬─ Operator revives within 60d + new cases ───→ PROVISIONAL (reset SHADOW)
+           └─ no revive in 60d ──────────────────────────→ archived
+```
+
+## Upgrade Gate Table by Charter Type (pre-enumerated)
+
+| Charter Type | Case Threshold | Correct Rate | SHADOW Period | Example |
+|---|---|---|---|---|
+| **Security rule** | 1 (single exposure = promote) | 100% (zero tolerance) | 0d (direct CONFIRMED) | `no_secret_dump` |
+| **Academic rule** (well-established principle) | 1 + 2 cross-vendor red team catches | 100% | 0d | `overlapping_returns_require_newey_west` |
+| **Methodology charter** | 3 | 80% | 30d | `cross_vendor_redteam_saves_blind_spots` |
+| **Execution discipline charter** | 5 | 70% | 30d | `borrow_then_localize` / `deterministic_over_llm_rederive` |
+| **Meta charter** | 2 (applied to ≥ 2 child charters) | 80% | 60d | this one (charter governance) |
+| **Domain SOP** | 4 | 75% | 60d | thesis failure mode / event reaction |
+| **Human ops** | 3 | 100% (interpersonal zero-tolerance) | 60d | advice 4-quadrant tree |
+
+## 6 Demotion Triggers (SUSPENDED)
+
+1. **Correct rate < 50%** — charter is failing more than it's helping
+2. **≥ 2 ill-defined cases** — cross-case contradictions → problem definition is wrong
+3. **SHADOW expired + cases < 1** — no real-world trigger, possibly unnecessary
+4. **Operator says "too verbose" 3 times** — anti-UX
+5. **≥ 3 new disconfirming cases** — experience refutes the rule
+6. **Violates upstream charter** — auto-supersede
+
+## Auto-Review Schedule (PDPC discipline externalized)
+
+- Every PROVISIONAL charter MUST include `shadow_expiry: YYYY-MM-DD` in frontmatter
+- Daily cron scans frontmatter; 7 days before expiry, sends inbox alert:
+  ```
+  ⚠️ Charter expiry warning:
+  - borrow-then-localize.md (expiry 2024-06-28, N days left)
+  - Cases triggered: M / correct rate: X% / ill-defined: Y
+  - Suggestion: promote to CONFIRMED / extend SHADOW / SUSPENDED
+  ```
+- Operator responds within 7 days → state transitions automatically
+- 7 days no response → demote to SUSPENDED awaiting revive
+
+Cron script example: [`../docs/cron_expiry_check.py`](../docs/cron_expiry_check.py).
+
+## Upgrade Gate Check PDPC (5 steps)
+
+Runs automatically at SHADOW expiry:
+
+1. **Count cases**: grep memory dir for `[charter-name]` mentions; exclude "rule itself referenced", count only "real-world triggered"
+2. **Compute correct rate**: per case outcome (was the captured judgment validated by later evidence)
+3. **Check ill-defined**: any cross-case contradictory advice (accepted R1 then R2 says R1 was wrong)
+4. **Match table**: compare against §Upgrade Gate Table by Charter Type
+5. **Verdict**: auto-suggest promote / extend / demote; operator responds within 7 days
+
+## How to Apply
+
+### Required frontmatter when writing new charter
+
+```yaml
+---
+name: ...
+description: ...
+metadata:
+  type: charter / feedback / project / reference
+  scope: family / meta / domain / human-ops / signal / macro
+  status: PROVISIONAL          # or DRAFT / CONFIRMED / SUSPENDED
+  shadow_expiry: 2024-MM-DD    # required, per table
+  pdpc_layer: borrow / execute / governance / signal / macro / human
+  upgrade_threshold:
+    cases: N
+    correct_rate: ≥ 0.XX
+  downgrade_triggers:
+    - correct_rate < 0.50
+    - ill-defined ≥ 2
+---
+```
+
+### Agent behavior
+
+- When mentioning a PROVISIONAL charter, MUST tag accumulated case count (don't wait until expiry to count)
+- Each trigger writes to charter's "cases" section
+- 7 days before SHADOW expiry, proactively report upgrade gate check
+- Don't rely on agent "feeling it" — follow the table
+
+## SHADOW → CONFIRMED Conditions (for this meta charter itself)
+
+- Within 60 days, apply to ≥ 2 child charters (this rule gets referenced + used to decide promote/demote)
+- No operator reversal
+- Expiry: 2024-XX-XX (meta charter 60d)
+
+## Cases (fill in after adoption)
+
+- (charter adoption date) (charter name) — promoted to CONFIRMED using "methodology charter" row (N cases / X% / 0 ill-defined) ✅ matched this table
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu — pre-enumerate + externalize discipline (meta governance layer)
+- Companion: [deterministic-over-llm-rederive](03-deterministic-over-llm-rederive.md) — execute layer
+- Companion: [borrow-then-localize](02-borrow-then-localize.md) — borrow layer
+
+---
+---
+
+# 中文版本
+
+# Charter 升降級 PDPC（Meta 層）
 
 統一所有 PROVISIONAL Charter 的升降級路徑樹，**預先窮舉**每個分叉的觸發條件，**不靠 agent 臨場判**。
 
@@ -141,7 +279,6 @@ metadata:
 ## 案例 section（落地後填）
 
 - (charter adoption date) (charter name) — 升 CONFIRMED 用「方法論 charter」格 (N cases / X% / 0 ill-defined) ✅ 對照本條表標準
-- ...
 
 ## 連結
 

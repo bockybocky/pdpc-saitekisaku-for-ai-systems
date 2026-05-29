@@ -1,6 +1,6 @@
 ---
 name: regime-switch-pdpc
-description: PROVISIONAL Charter — Macro regime 切換預先窮舉動作樹，不靠每次臨場判
+description: PROVISIONAL Charter — Macro regime transitions must follow a pre-enumerated action tree, not in-the-moment improvisation.
 metadata:
   type: feedback
   scope: macro
@@ -11,8 +11,138 @@ metadata:
     cases: 4
     correct_rate: 0.75
   downgrade_triggers:
-    - Operator 抱怨「太機械化」
+    - Operator complains "too mechanical"
 ---
+
+# Macro Regime Switch PDPC
+
+Macro regime transitions MUST follow a pre-enumerated action tree, not in-the-moment improvisation.
+
+## Why
+
+Macro regime transitions are **low-frequency, high-impact events** (2-4 major switches per year):
+- Bull → Bear transition triggers easy panic
+- Bear → Bull reverse causes missed opportunity
+- Each time agent "re-thinks" countermeasures → same transition gives different recommendations in different sessions
+
+PDPC solution: pre-enumerate "regime × switch direction × position class" → action.
+
+## 5 Regime Buckets
+
+Group by your macro framework (example uses 5 buckets, can be 13/24/N):
+
+| Group | Description | Macro Meaning |
+|---|---|---|
+| **🟢 Bull Aligned** | Multi-asset uptrend | Clear bull |
+| **🟡 Bull Recover** | Recovering from bear | Momentum turning positive |
+| **⚪ Neutral** | Sideways / Choppy | No clear direction |
+| **🟠 Bear Recover** | Bounce within bear | False rally risk |
+| **🔴 Bear Aligned** | Multi-asset downtrend | Clear bear |
+
+## 5×5 Switch Reaction PDPC Tree
+
+```
+From → To             | Strength | Position Action
+─────────────────────┼─────────┼──────────────────────────────
+🟢 Bull → 🟡 Recover  | weak    | observe, no action
+🟢 Bull → ⚪ Neutral  | medium  | Core trim 10%, clear watchlist
+🟢 Bull → 🟠 Bear Rec | strong  | Core trim 25%, clear watchlist
+🟢 Bull → 🔴 Bear     | extreme | Core trim 50%, cash up to 30%+
+🟡 Recover → 🟢 Bull  | scale-up | watchlist → core, add 5-10%
+🟡 → 🔴 Bear          | reversal | Core trim 33%, cash up to 25%+
+⚪ Neutral → 🟢 Bull   | scale-up | watchlist add 50%
+⚪ Neutral → 🔴 Bear   | defensive | Core trim 15%, cash 20%+
+🟠 Bear Rec → 🟢 Bull  | confirmed reversal | aggressive add, core back to 80%+
+🟠 Bear Rec → 🔴 Bear  | false rally | trim defensively, cash 30%+
+🔴 Bear → 🟠 Recover  | testing bottom | observe, 1/3 add watchlist
+🔴 Bear → 🟡 Recover  | recovery | Core back from 40% to 60-70%
+🔴 Bear → 🟢 Bull     | bull market resumed | full scale, cash down to 5-10%
+```
+
+**Micro-switches within same bucket** don't count as major switch, hold no action.
+
+## Asset Modifier (×3 細分)
+
+Regime switch doesn't need to treat every position uniformly. Look at asset state:
+
+| Asset state | modifier |
+|---|---|
+| **Strong momentum + uptrend** | switch action **halved** (asset strong, hold longer) |
+| **Weak momentum + downtrend** | switch action **doubled** (asset weak, trim faster) |
+| **Middle state** | follow table |
+
+## Switch Confirmation Rules (avoid whipsaw)
+
+PDPC triggers only if:
+
+1. Regime switch **confirmed for 5 consecutive trading days** (not a single-day jump)
+2. Not in earnings season (avoid event interference)
+3. Volatility index direction matches (Bull → Bear must have VIX rising)
+
+If any condition fails → mark `pending confirm`, re-check in 14 days.
+
+## How to Apply
+
+### Daily Cron
+
+`daily_regime_monitor.py`:
+- Daily EOD captures current regime
+- Compare to 5-day-ago regime
+- If switched → run 3 confirmation rules
+- All pass → inbox alert: "Regime switched from {A} to {B}, PDPC tree suggests: {action}"
+
+### Agent Trigger
+
+After regime switch alert, agent MUST:
+1. Match this charter's 5×5 table
+2. Add individual modifier per position
+3. Compute total trim % + cash lift
+4. Write separate ledger entry
+
+### Ledger Recording
+
+Write to `regime_transitions.jsonl`:
+
+```json
+{
+  "date": "2024-XX-XX",
+  "from": "Bull_Aligned",
+  "to": "Bear_Aligned",
+  "confirmation_days": 5,
+  "action_taken": "trim 25%",
+  "cash_lifted_to": "30%",
+  "post_30d_outcome": "correct"
+}
+```
+
+## Exceptions
+
+- **Regime switch concurrent with major macro event** (Fed rate change, war, pandemic) → PDPC tree **paused**, run emergency fast-track
+- **Asset has independent catalyst** (product launch, acquisition) → regime switch doesn't apply to that position
+
+## PDPC Philosophy
+
+Application of "saitekisaku tsuikyu" at the **macro layer**: pre-enumerate all regime switch possibilities → corresponding action tree.
+
+Same spirit as [signal-event-reaction-tree](04-signal-event-reaction-tree.md), but macro layer's time scale is slower and impact larger.
+
+## SHADOW → CONFIRMED Conditions
+
+- Within 60 days, regime switches ≥ 4 times (including minor)
+- Correct rate ≥ 75% (action right when looking back 30 days)
+- Operator didn't complain "too mechanical"
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu (macro layer)
+- Companion: [signal-event-reaction-tree](04-signal-event-reaction-tree.md) — signal layer sibling
+- Companion: [thesis-failure-mode-tree](07-thesis-failure-mode-tree.md) — §macro mode 細化
+- Meta: [promotion-demotion-meta](01-promotion-demotion-meta.md)
+
+---
+---
+
+# 中文版本
 
 # Macro Regime 切換 PDPC
 

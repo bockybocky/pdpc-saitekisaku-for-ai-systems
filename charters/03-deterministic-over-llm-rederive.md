@@ -1,6 +1,6 @@
 ---
 name: deterministic-over-llm-rederive
-description: PROVISIONAL Charter — 重複性 skill 流程的 logic 部分 MUST 抽成 deterministic script，不靠 LLM 每次 re-derive；SKILL prose 只留 what + when，how 走 script
+description: PROVISIONAL Charter — Any logic in a repeated skill flow MUST be extracted into a deterministic script. Don't let LLM re-derive it each turn. SKILL prose only describes what + when; how lives in script.
 metadata:
   type: feedback
   scope: execute
@@ -11,8 +11,151 @@ metadata:
     cases: 5
     correct_rate: 0.70
   downgrade_triggers:
-    - Operator 抱怨「script 太多管不動」
+    - Operator complains "too many scripts to manage"
 ---
+
+# Deterministic Script > LLM Re-Derive Each Turn
+
+Any logic in a flow run ≥ 5 times by the same skill MUST be extracted into a deterministic script (Python stdlib-only preferred). **SKILL prose only writes what + when; how lives in the script.**
+
+## Why
+
+LLM re-deriving the same logic each turn:
+- Produces inconsistent results (same input → different output)
+- Has fuzzy thresholds → triggers too often or too rarely
+- Write paths without dedup → duplicate data accumulates
+
+**Real case** (open-source industry lesson — fredchu/claude-session-handoff v1.4 CHANGELOG original text):
+
+> Duplicate notes root cause. Create/update was LLM-driven raw AppleScript with self-judged "first time vs update", producing duplicate canonical notes over time.
+
+Translation: relying on LLM to self-judge "first time vs update" creates duplicates — **write-path defense via LLM discipline is unreliable**.
+
+**Solution**: writes go through deterministic upsert script; dedup sweep runs on every SessionStart.
+
+## 3 Rules
+
+### Rule 1: Threshold for identifying repeatable flow
+
+Any flow meeting any one of these → extract to script:
+
+- Run ≥ **5 times** by same skill with identical logic each time
+- Prose contains "scan", "detect", "judge if ≥ N", "group by condition" — deterministic ops
+- Relies on LLM self-judging fuzzy thresholds ("if there's a lesson", "worth distilling", "enough yet")
+
+### Rule 2: SKILL prose only writes what + when
+
+Prose SHOULD contain:
+- ✅ **what**: this phase does what (one sentence)
+- ✅ **when**: what condition triggers
+- ✅ **why**: why this is done this way
+
+Prose SHOULD NOT contain:
+- ❌ **how**: specific logic / condition checks / parser / sort key
+
+All "how" goes in script. SKILL prose writes:
+
+```markdown
+### Phase 3: Weekly Consolidation (auto)
+
+Run directly when archive ≥ 5:
+
+\`\`\`bash
+python scripts/count_archive_entries.py
+# If should_consolidate=true → execute directly
+python scripts/consolidate_archive.py
+\`\`\`
+```
+
+Don't write: "Scan the entire week's archive, detect: repeating problems → suggest writing to MEMORY..." (this prose becomes LLM re-deriving each time).
+
+### Rule 3: Script design rules
+
+- **stdlib only**: avoid third-party libs (pandas / numpy etc.) — LLM tooling environment may not have them
+- **single-purpose**: one script does one thing
+- **CLI'd**: argparse, supports dry-run, supports --quiet for hooks
+- **output JSON**: machine-readable for next script / LLM
+
+## How to Apply
+
+### Trigger scan
+
+Every SKILL edit / new skill creation, self-ask:
+1. Will this prose-described logic execute ≥ 5 times?
+2. Does the condition have a definite threshold (number / exact match / regex)?
+3. Should same input produce same output?
+
+3 yeses → extract script.
+
+### Template
+
+stdlib-only script template (~50-100 lines):
+
+```python
+#!/usr/bin/env python3
+"""One-line purpose."""
+import argparse, json, sys
+from pathlib import Path
+
+def core_logic(data):
+    ...
+    return result
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
+
+    result = core_logic(...)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+## PDPC Philosophy
+
+Application of "saitekisaku tsuikyu" at the **execute layer**: pre-enumerate logic → freeze into script → don't let LLM re-derive in the moment.
+
+PDPC tree execute-variant:
+
+```
+Repeated logic ─┬─ ≥ 5 times same input/output → extract deterministic script
+                └─ < 5 times / context varies each time → keep as LLM prose
+```
+
+## SHADOW → CONFIRMED Conditions
+
+- Within 30 days, successfully extracted scripts ≥ 5 times
+- Post-extraction LLM trigger rate / consistency **noticeably improves** (quantifiable proxy: consolidate trigger count / dedup result)
+- Operator didn't complain "too many scripts to manage"
+
+## Cases (real OSS reference, public)
+
+### Case: fredchu/claude-session-handoff v1.4.0 (2024-05-29)
+
+| Before | After |
+|---|---|
+| LLM self-judges "first time vs update" | `applescript_notes.py write` exact-title upsert |
+| Write failures rely on LLM retry | `run_applescript` auto-retries `-1719`/`-1712`/`-1700` |
+| Duplicate Notes accumulate | `applescript_notes.py dedup --apply` runs every SessionStart |
+
+Outcome: duplicate root cause resolved.
+
+CHANGELOG: https://github.com/fredchu/claude-session-handoff/blob/main/CHANGELOG.md
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu (execute layer)
+- Companion: [borrow-then-localize](02-borrow-then-localize.md) — borrow layer sibling (post-borrow logic determinism)
+- Meta: [promotion-demotion-meta](01-promotion-demotion-meta.md)
+
+---
+---
+
+# 中文版本
 
 # Deterministic Script > LLM 每次 Re-derive
 

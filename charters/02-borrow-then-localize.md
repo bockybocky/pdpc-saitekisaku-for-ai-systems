@@ -1,6 +1,6 @@
 ---
 name: borrow-then-localize
-description: PROVISIONAL Charter — 看到外部 repo / library 想「整合進我們系統」時，MUST 先列「原有功能 + 最新版新增 + 跟本地 gap」三表 + 給範圍選項，禁直接 clone 整套
+description: PROVISIONAL Charter — When seeing external repo / library to "integrate into our system", MUST first list 3 tables (original features + latest changes + gap vs local) and give scope options. Forbid blindly cloning the whole thing.
 metadata:
   type: feedback
   scope: borrow
@@ -11,8 +11,131 @@ metadata:
     cases: 3
     correct_rate: 0.80
   downgrade_triggers:
-    - Operator 3 次說「不用列表直接做」→ SUSPEND
+    - Operator says "skip the list, just do it" 3 times → SUSPEND
 ---
+
+# Borrow Then Localize (Not Direct Clone)
+
+When the operator gives a GitHub URL and says "adapt it to our system / integrate it / port it over", the agent MUST follow a 5-step SOP. **Direct cloning of the whole thing is forbidden.**
+
+## Why
+
+Directly cloning the entire external repo easily hits:
+1. **Platform incompatibility** (e.g., macOS-only repo on Windows)
+2. **Auth / permission differences**
+3. **Architecture conflicts with existing system**
+4. **Unused layers becoming dead weight**
+
+But not borrowing at all is also wrong — good repos often hide gems in their design evolution (v1.0 → v1.4) like dedup sweeps, lesson extraction patterns.
+
+**Solution**: spread out + layer + choose scope, then act.
+
+## 5-Step SOP
+
+### 1. Fetch metadata (no clone)
+
+```bash
+curl -s https://api.github.com/repos/{owner}/{repo}      # default branch + last update
+curl -s https://api.github.com/repos/{owner}/{repo}/commits?per_page=5
+curl -s https://raw.githubusercontent.com/.../README.md
+curl -s https://raw.githubusercontent.com/.../CHANGELOG.md
+```
+
+Only fetch README + CHANGELOG + last 5 commits. **No clone yet.**
+
+### 2. List "Original Features" Table
+
+Break down by version, one row per version — reveals **design evolution**:
+
+```
+| Version | Features |
+|---|---|
+| v1.0 | Core X / Y / Z |
+| v1.2 | Added "lesson extraction system" 5 signals + 5 steps |
+| v1.4 | Dedup sweep + Python script-ified |
+```
+
+### 3. List "Latest Version Additions" Table
+
+Latest CHANGELOG split into Added / Fixed / Changed three columns.
+
+### 4. List "Gap vs Local" Table
+
+For each feature: does local already have it? Platform compatible? Same source paradigm?
+
+```
+| External feature | Local has? | Platform compatible? | Fit score |
+|---|---|---|---|
+| Apple Notes persistence | ❌ | ❌ macOS only | skip |
+| Phase 4 5 signals | ❌ Phase 4 is prose-only | ✅ portable | high |
+| Dedup sweep | ❌ | ✅ rewrite markdown ver | high |
+```
+
+### 5. Present 3-4 Scope Options + Recommendation
+
+```
+A. Full port (4 items + rewrite local-compatible version)
+B. High-ROI subset only (lesson extraction + dedup sweep)
+C. Just learn the methodology, don't import
+D. Skip entirely (functionality too different from local)
+
+Recommended: B — XXX fills local weakness + YYY is a safety net
+```
+
+## How to Apply
+
+**Trigger phrases**:
+- "Update {github URL}" (still "for our system" context, not pure fetch)
+- "Adapt this to our system"
+- "Integrate {repo}"
+- "Port {repo} over"
+- "Import {repo}"
+
+**Forbidden**:
+- ❌ Direct `git clone` of the whole thing locally
+- ❌ Skip metadata, jump to reading main files
+- ❌ Don't list gap table, just pick
+
+**Exceptions** (don't trigger this SOP):
+- "Fetch {URL} for me to look at" / "summarize" = pure fetch, no import
+- "Pull latest of {URL}" = already a local fork, pure git pull
+- "Install {URL} skill" + owner is plugin marketplace = pure install
+
+## PDPC Philosophy
+
+Application of "saitekisaku tsuikyu" discipline at the **borrow layer**: pre-enumerate gap → scope options → don't blindly import.
+
+PDPC tree borrow-variant:
+
+```
+See external repo ─┬─ Pure exploration ("fetch for me") ──→ Pure fetch, no import
+                   ├─ Integration context ("adapt to our system") ──→ Run 5-step SOP
+                   │   └─ After gap table eval ──┬─ Full port (A)
+                   │                              ├─ High-ROI subset (B)  ← usually recommended
+                   │                              ├─ Learn methodology only (C)
+                   │                              └─ Skip entirely (D)
+                   └─ Local fork exists ────────→ Pure git pull
+```
+
+## SHADOW → CONFIRMED Conditions
+
+- Within 30 days, triggered ≥ 3 times + each time completed 5-step SOP + Operator didn't complain "too verbose"
+- Demotion: Operator says "skip the list, just do it" 3 times → SUSPEND
+
+## Cases (fill in after adoption)
+
+- 2024-XX-XX (repo URL): Operator gave URL → ran 5-step → recommended B → avoided platform pitfall
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu (borrow layer)
+- Companion: [deterministic-over-llm-rederive](03-deterministic-over-llm-rederive.md) — execute layer (post-borrow logic determinism)
+- Meta: [promotion-demotion-meta](01-promotion-demotion-meta.md)
+
+---
+---
+
+# 中文版本
 
 # 借鏡 → 在地化（不是直接 clone）
 

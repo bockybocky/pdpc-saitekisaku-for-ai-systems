@@ -1,6 +1,6 @@
 ---
 name: signal-event-reaction-tree
-description: PROVISIONAL Charter — 高頻 signal event (e.g., earnings call / FOMC / 公司公告) 反應 MUST 走預先窮舉的 PDPC 樹，不靠當下臨場判
+description: PROVISIONAL Charter — High-frequency signal events (e.g., earnings call / FOMC / company announcement) reactions MUST follow a pre-enumerated PDPC tree, not in-the-moment improvisation.
 metadata:
   type: feedback
   scope: signal
@@ -11,8 +11,128 @@ metadata:
     cases: 4
     correct_rate: 0.75
   downgrade_triggers:
-    - Operator 抱怨「太機械化」
+    - Operator complains "too mechanical"
 ---
+
+# Signal Event Reaction PDPC (Highest-Frequency Decision Layer)
+
+After every high-frequency signal event, the agent MUST follow a pre-enumerated PDPC tree, **not in-the-moment improvisation**.
+
+## Why
+
+High-frequency signal events (earnings call / Fed meeting / company announcement / breakout signal) are where agents get most confused:
+- Miss → operator easily panic-sells
+- Beat → over-chases (FOMO)
+- Same input, different session gives different recommendation — **inconsistency**
+
+PDPC solution: **pre-enumerate** "signal × context × position state" dimensions → corresponding decision tree.
+
+## Example: Earnings Call Reaction (3×3 PDPC)
+
+Using earnings call as example (other signal events apply same pattern):
+
+3 dimensions = EPS surprise × Guidance × Position state
+
+|  | Guidance Raise | Guidance Hold | Guidance Cut |
+|---|---|---|---|
+| **EPS Beat** | **A1**: thesis strengthened → hold / scale-in observe | **A2**: beat but mgmt conservative → hold / watch | **A3**: beat but cut guide = **warning** → re-review thesis pillar |
+| **EPS Inline** | **B1**: guide raise = forward leaning → hold | **B2**: pure inline → hold (no action) | **B3**: cut guide = warning → trim 1/3 |
+| **EPS Miss** | **C1**: miss but raise = one-time → check details | **C2**: miss + hold = real slowdown → trim 1/3 | **C3**: miss + cut = double-down → **kill switch triggered** |
+
+**Action gradient**:
+- hold = no action
+- scale-in observe = add 0.5× (half-position test)
+- re-review thesis pillar = within 48h run 5-failure-mode check
+- trim 1/3 = cut 33% position to de-risk
+- kill switch triggered = follow thesis preset exit action
+
+## Position State Modifier (×2 細分)
+
+Each scenario further split by position state:
+
+| Position class | modifier |
+|---|---|
+| **Core position** (≥ 5% portfolio) | follow table, but "re-review" → 72h, "trim" → conservative (1/3 not 1/2) |
+| **Watchlist position** (< 2% portfolio) | follow table, but "re-review" → 24h, "trim" → aggressive (1/2 not 1/3) |
+| **New position** (< 3 months held) | **any miss triggers kill switch** (thesis not yet validated, shouldn't tolerate negative) |
+
+## Reaction Time PDPC
+
+| After Event | Action |
+|---|---|
+| **0-15 min** | Read numbers + opening 5 min → match matrix → tag scenario |
+| **15-30 min** | Grep thesis + run failure mode tree → determine modifier |
+| **Within 30 min** | Write inbox alert: "{asset} event lands at {scenario code} → suggested {action} → operator decides" |
+| **30 min before next session open** | Check pre-market price → match preset → execute or hold |
+
+**Forbidden**: trading within 30 min (give operator decision space; agent does not auto-execute).
+
+## How to Apply
+
+### Event Pre-Season Preparation (1 week ahead)
+
+1. Grep asset thesis for kill_switch + failure_mode
+2. Mark matrix cells that "would trigger kill switch" (usually C2 / C3)
+3. Pre-write pre-mortem: "if it lands C3 I will do X"
+
+### Event Day
+
+Agent auto-triggered SOP (no operator prompt needed):
+1. Capture actual + consensus → compute surprise
+2. Find matrix cell
+3. Add position state modifier
+4. Report: "{asset} lands at {code+modifier} → preset action {X} → operator responds in 30 min or default fires"
+
+### Ledger Recording
+
+Write to `events_log.jsonl`:
+
+```json
+{
+  "date": "2024-XX-XX",
+  "asset": "XXX",
+  "event_type": "earnings_call",
+  "case": "B2",
+  "modifier": "core",
+  "pre_action": "hold",
+  "post_30d_return": "+5.2%",
+  "thesis_outcome": "correct"
+}
+```
+
+Quarterly review runs PDPC correct rate calc (used for meta charter upgrade gate).
+
+## Exceptions
+
+- **Big beat (> 20%) + big AH gain (> 15%)** → not in matrix → trigger FOMO red-flag stop (avoid wrong scale-up)
+- **First event after onboarding** (e.g., post-IPO first earnings) → any miss triggers kill switch
+- **Management transition concurrent** → matrix skipped, run thesis SUSPENDED re-review path
+
+## PDPC Philosophy
+
+Application of "saitekisaku tsuikyu" at the **signal layer**: pre-enumerate all signal × context combos → corresponding action tree.
+
+"Signal event reaction" is the agent's highest-frequency decision (several to dozens per month) + the most chaos-prone scenario. Externalizing in-the-moment judgment to a tree is core discipline.
+
+## SHADOW → CONFIRMED Conditions
+
+(Per meta charter Domain SOP row)
+
+- Within 60 days, applied to ≥ 4 events
+- Correct rate ≥ 75% (scenario judgment correct + action right when looking back 30 days)
+- Operator didn't complain "too mechanical"
+
+## Links
+
+- Philosophical source: PDPC saitekisaku tsuikyu (signal layer / highest-frequency app)
+- Companion: [thesis-failure-mode-tree](07-thesis-failure-mode-tree.md) — 5-failure-mode tree细化
+- Companion: [regime-switch-pdpc](05-regime-switch-pdpc.md) — macro layer sibling
+- Meta: [promotion-demotion-meta](01-promotion-demotion-meta.md)
+
+---
+---
+
+# 中文版本
 
 # Signal Event Reaction PDPC（最高頻決策層）
 

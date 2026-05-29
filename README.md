@@ -1,3 +1,130 @@
+# PDPC Saitekisaku Tsuikyu for AI Systems
+
+> Japanese QC discipline "Saitekisaku Tsuikyu" (最適策追究 / pursuit of optimal countermeasures) applied to govern decisions, signals, and execution in AI agent systems
+
+**PDPC** (Process Decision Program Chart, 過程決策程序圖) — one of the 7 New QC Tools formalized by Mizuno Shigeru in 1979. Core verb is **追究 (tsuikyu / pursuit)**: exhaustively interrogate every failure mode until an optimal countermeasure is found.
+
+A cousin of FMEA / FTA / Decision Tree, but with stronger emphasis on **dynamic replan + discipline externalization**.
+
+---
+
+## Why AI Agent Systems Need This
+
+Common LLM-based agent problems (you've probably hit all of these):
+
+| Problem | PDPC Solution |
+|---|---|
+| Agent re-derives same logic each time and gets inconsistent results | Freeze deterministic logic into rules / scripts; forbid LLM from re-thinking each turn |
+| Agent blindly clones external repo and hits platform pitfalls | "Borrow then localize" discipline: fork to local, review per-component |
+| Charters / rules accumulate but no one reviews them | Unified promotion / demotion gates (PROVISIONAL → CONFIRMED / SUSPENDED) + daily cron expiry alert |
+| Red-flag signal fires but human brain freezes in the moment | Pre-enumerate 4-branch PDPC tree, follow the tree instead of improvising |
+
+**Core principle**: discipline lives outside (in charters / rules / cron jobs), not inside the agent's "intuition this turn".
+
+---
+
+## 7 Charters Included
+
+| Charter | Problem Solved | Layer |
+|---|---|---|
+| [promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | Each charter sets its own promotion criteria; no consistent framework | Meta governance |
+| [borrow-then-localize](charters/02-borrow-then-localize.md) | Blindly cloning external repos creates platform / architecture mismatches | Borrow / Execute |
+| [deterministic-over-llm-rederive](charters/03-deterministic-over-llm-rederive.md) | LLM re-deriving same logic each turn → inconsistent results | Borrow / Execute |
+| [signal-event-reaction-tree](charters/04-signal-event-reaction-tree.md) | High-frequency signal events (e.g., earnings) reacted to ad-hoc | Signal layer |
+| [regime-switch-pdpc](charters/05-regime-switch-pdpc.md) | Regime change reactions not pre-codified | Macro layer |
+| [advice-result-tree](charters/06-advice-result-tree.md) | 4 possible outcomes after giving advice not pre-thought | Human ops |
+| [thesis-failure-mode-tree](charters/07-thesis-failure-mode-tree.md) | Thesis failure modes not pre-enumerated | Domain SOP |
+
+Every charter is an instance of the same principle: **pre-enumerate + externalize discipline**.
+
+---
+
+## 4 States + 6 Transitions PDPC Tree (Meta Charter Core)
+
+Every charter runs through a 4-state lifecycle:
+
+```
+DRAFT ─┬─ Operator acks within 7 days ──→ PROVISIONAL (SHADOW begins)
+       └─ no ack in 7 days ───────────────→ discarded
+
+PROVISIONAL ─┬─ N cases + correct rate ≥ 80% + 0 ill-defined → CONFIRMED
+             ├─ correct rate < 50% ─────────────────────────→ SUSPENDED
+             ├─ ≥ 2 ill-defined / contradictory cases ────→ SUSPENDED
+             ├─ SHADOW expired + cases < 1 ────────────────→ SUSPENDED (dormant, not deleted)
+             └─ Operator says "too verbose" 3 times ───────→ SUSPENDED
+
+CONFIRMED ─┬─ ≥ 3 new disconfirming cases + Operator ack ─→ SUSPENDED (rare)
+           └─ Violates upstream charter ─────────────────→ SUSPENDED (auto supersede)
+
+SUSPENDED ─┬─ Operator revives within 60d + new evidence ─→ PROVISIONAL (reset SHADOW)
+           └─ no revive in 60d ──────────────────────────→ archived
+```
+
+---
+
+## How to Use
+
+### 1. Fork charters into your agent system's memory
+
+Each charter is markdown + YAML frontmatter. Drop them into your agent memory dir (Claude Code: `~/.claude/projects/.../memory/`; other agent runtimes similarly).
+
+### 2. Schedule a daily cron for expiry checks
+
+Every PROVISIONAL charter has `shadow_expiry: YYYY-MM-DD` in frontmatter. Cron scans daily, alerts 7 days before expiry:
+
+```
+⚠️ Charter expiry warning:
+- borrow-then-localize.md (expiry 2024-06-28, 7 days left)
+- Cases triggered: 3 / correct rate: 85% / ill-defined: 0
+- Suggestion: promote to CONFIRMED
+```
+
+Cron script example: [`docs/cron_expiry_check.py`](docs/cron_expiry_check.py).
+
+### 3. Use the template when writing new charters
+
+See [`docs/CHARTER_TEMPLATE.md`](docs/CHARTER_TEMPLATE.md). Every charter MUST include:
+- `shadow_expiry`
+- `pdpc_layer`
+- `upgrade_threshold` (cases / correct_rate)
+- `downgrade_triggers`
+
+---
+
+## Philosophical Sources
+
+| Reference | Why It Matters |
+|---|---|
+| Mizuno Shigeru 1979 *Management for Quality Improvement: The 7 New QC Tools* | PDPC originating book |
+| Rother 2009 *Toyota Kata* | Western codification of Improvement Kata / Coaching Kata |
+| Ohno 1988 *Toyota Production System* | Source of 5 Why |
+| Asakawa《なぜなぜ分析 実践編》 | Japanese 5 Why practical edition |
+
+PDPC is in the same family as **Toyota TBP**, **5 Why**, **A3 Problem Solving**, **FMEA**, **OODA loop**. This repo focuses on the **discipline of pursuit itself**, not tool minutiae.
+
+---
+
+## License
+
+MIT — free to use / fork / modify / commercial use.
+
+---
+
+## Origin
+
+This repo was extracted from [@bockybocky](https://github.com/bockybocky)'s personal AI agent system memory. The original system contained financial domain-specific context; this repo has been generic-ized to remove any trader / asset / strategy specifics.
+
+If your agent system suffers from "rules accumulate but governance breaks down", the PDPC 4-state + 7-charter pattern should help.
+
+---
+
+*PDPC Saitekisaku Tsuikyu — write the pursuit discipline into the AI agent system, don't rely on in-the-moment improvisation.*
+
+---
+---
+
+# 中文版本
+
 # PDPC 最適策追究 for AI Systems
 
 > 用日本品管「最適策追究」紀律，治理 AI Agent 系統的決策、信號、執行流程
@@ -27,7 +154,7 @@ LLM-based agent 常見毛病（你大概都遇過）：
 
 | Charter | 解決問題 | Layer |
 |---|---|---|
-| [charter-promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | 每條 charter 自己訂條件，缺一致框架 | Meta governance |
+| [promotion-demotion-meta](charters/01-promotion-demotion-meta.md) | 每條 charter 自己訂條件，缺一致框架 | Meta governance |
 | [borrow-then-localize](charters/02-borrow-then-localize.md) | 外部 repo 盲目 clone 踩平台陷阱 | Borrow / Execute |
 | [deterministic-over-llm-rederive](charters/03-deterministic-over-llm-rederive.md) | LLM 每次 re-derive 同 logic 不一致 | Borrow / Execute |
 | [signal-event-reaction-tree](charters/04-signal-event-reaction-tree.md) | 重大事件（e.g., earnings call）反應 logic 沒預先窮舉 | Signal layer |
